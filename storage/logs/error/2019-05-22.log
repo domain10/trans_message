@@ -1,0 +1,57 @@
+[2019-05-22 16:35:06] post:172.20.0.1,{"mid":6534359706134532096,"content":"update order set a='test',b=b+1 where id=100"},response:,error:Post 172.20.0.1: unsupported protocol scheme ""
+[2019-05-22 16:35:06] post:172.20.0.2,{"mid":6534359706134532096,"content":"insert into orders_detail (a,b) values ('name','张飞')"},response:,error:Post 172.20.0.2: unsupported protocol scheme ""
+[2019-05-22 16:35:06] post:,{"mid":6534359908690055168,"content":"update order set a='test',b=b+1 where id=100"},response:,error:Post : unsupported protocol scheme ""
+[2019-05-22 16:35:06] post:,{"mid":6534359908690055168,"content":"insert into orders_detail (a,b) values ('name','张飞')"},response:,error:Post : unsupported protocol scheme ""
+[2019-05-22 16:35:07] post:http://172.20.0.1,{"mid":6534360294243061760,"content":"update order set a='test',b=b+1 where id=100"},response:,error:Post http://172.20.0.1: dial tcp 172.20.0.1:80: connectex: No connection could be made because the target machine actively refused it.
+[2019-05-22 16:35:08] post:http://172.20.0.2,{"mid":6534360294243061760,"content":"insert into orders_detail (a,b) values ('name','张飞')"},response:<!DOCTYPE html><html><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=renderer content=webkit><meta http-equiv=Content-Type content="text/html; charset=UTF-8"><meta http-equiv=Expires content=0><meta http-equiv=Pragma content=no-cache><meta http-equiv=Cache-control content=no-cache><meta http-equiv=Cache content=no-cache><script>if(!Proxy){
+            alert('您的浏览器无法正常使用该ERP系统，请更换Chrome,火孤浏览器，不便之处请谅解');
+        }</script><title>ERP系统--利朗达</title><style>html {
+            font-size: 62.5%;
+        }</style><link href=/static/css/app.2d3f458c255035ca01360014b542d84b.css rel=stylesheet></head><body><div id=app></div><script type=text/javascript src=/static/js/manifest.34c42e7b3c35532fda41.js></script><script type=text/javascript src=/static/js/vendor.bbdc5655330ff3156fc4.js></script><script type=text/javascript src=/static/js/app.9f40cf37eabf16bd91b0.js></script></body></html>,error:invalid character '<' looking for beginning of value
+[2019-05-22 16:35:08] post:http://172.18.8.242,{"mid":6534362494679797760,"content":"update order set a='test',b=b+1 where id=100"},response:
+[2019-05-22 16:35:08] post:http://172.18.8.242,{"mid":6534362922209398784,"content":"update order set a='test',b=b+1 where id=100"},response:
+[2019-05-22 16:35:08] post:http://172.18.8.242,{"mid":6534364293499342848,"content":"update order set a='test',b=b+1 where id=100"},response:
+[2019-05-22 16:35:08] post:http://172.18.8.242,{"mid":6535076069320839168,"content":"update order set a='test',b=b+1 where id=100"},response:
+[2019-05-22 16:35:08] post:http://172.18.8.242,{"mid":6535082121563099136,"content":"update order set a='test',b=b+1 where id=100"},response:
+[2019-05-22 16:35:08] post:http://172.18.8.242,{"mid":6535083390428139520,"content":"update order set a='test',b=b+1 where id=100"},response:
+[2019-05-22 16:35:08] post:http://172.18.8.242,{"mid":6535086008386867200,"content":"update order set a='test',b=b+1 where id=100"},response:
+[2019-05-22 16:35:08] get:,response:,error:Get ?mid=0: unsupported protocol scheme ""
+[2019-05-22 16:35:08] post:http://172.18.8.242,{"mid":6693750837702819840,"content":"update order set a='test',b=b+1 where id=100"},response:
+[2019-05-22 16:40:43] post:172.20.0.1,{"mid":6534359706134532096,"content":"update order set a='test',b=b+1 where id=100"},response:,error:Post 172.20.0.1: unsupported protocol scheme ""
+[2019-05-22 16:40:43] post:172.20.0.2,{"mid":6534359706134532096,"content":"insert into orders_detail (a,b) values ('name','张飞')"},response:,error:Post 172.20.0.2: unsupported protocol scheme ""
+[2019-05-22 16:40:43] post:,{"mid":6534359908690055168,"content":"update order set a='test',b=b+1 where id=100"},response:,error:Post : unsupported protocol scheme ""
+[2019-05-22 16:40:43] post:,{"mid":6534359908690055168,"content":"insert into orders_detail (a,b) values ('name','张飞')"},response:,error:Post : unsupported protocol scheme ""
+[2019-05-22 16:40:44] post:http://172.20.0.1,{"mid":6534360294243061760,"content":"update order set a='test',b=b+1 where id=100"},response:,error:Post http://172.20.0.1: dial tcp 172.20.0.1:80: connectex: No connection could be made because the target machine actively refused it.
+[2019-05-22 16:40:44] post:http://172.20.0.2,{"mid":6534360294243061760,"content":"insert into orders_detail (a,b) values ('name','张飞')"},response:<!DOCTYPE html><html><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=renderer content=webkit><meta http-equiv=Content-Type content="text/html; charset=UTF-8"><meta http-equiv=Expires content=0><meta http-equiv=Pragma content=no-cache><meta http-equiv=Cache-control content=no-cache><meta http-equiv=Cache content=no-cache><script>if(!Proxy){
+            alert('您的浏览器无法正常使用该ERP系统，请更换Chrome,火孤浏览器，不便之处请谅解');
+        }</script><title>ERP系统--利朗达</title><style>html {
+            font-size: 62.5%;
+        }</style><link href=/static/css/app.2d3f458c255035ca01360014b542d84b.css rel=stylesheet></head><body><div id=app></div><script type=text/javascript src=/static/js/manifest.34c42e7b3c35532fda41.js></script><script type=text/javascript src=/static/js/vendor.bbdc5655330ff3156fc4.js></script><script type=text/javascript src=/static/js/app.9f40cf37eabf16bd91b0.js></script></body></html>,error:invalid character '<' looking for beginning of value
+[2019-05-22 16:40:44] post:http://172.18.8.242,{"mid":6534362494679797760,"content":"update order set a='test',b=b+1 where id=100"},response:
+[2019-05-22 16:40:44] post:http://172.18.8.242,{"mid":6534362922209398784,"content":"update order set a='test',b=b+1 where id=100"},response:
+[2019-05-22 16:40:44] post:http://172.18.8.242,{"mid":6534364293499342848,"content":"update order set a='test',b=b+1 where id=100"},response:
+[2019-05-22 16:40:44] post:http://172.18.8.242,{"mid":6535076069320839168,"content":"update order set a='test',b=b+1 where id=100"},response:
+[2019-05-22 16:40:44] post:http://172.18.8.242,{"mid":6535082121563099136,"content":"update order set a='test',b=b+1 where id=100"},response:
+[2019-05-22 16:40:44] post:http://172.18.8.242,{"mid":6535083390428139520,"content":"update order set a='test',b=b+1 where id=100"},response:
+[2019-05-22 16:40:44] post:http://172.18.8.242,{"mid":6535086008386867200,"content":"update order set a='test',b=b+1 where id=100"},response:
+[2019-05-22 16:40:44] get:,response:,error:Get ?mid=0: unsupported protocol scheme ""
+[2019-05-22 16:40:44] post:http://172.18.8.242,{"mid":6693750837702819840,"content":"update order set a='test',b=b+1 where id=100"},response:
+[2019-05-22 17:47:42] post:172.20.0.1,{"mid":6534359706134532096,"content":"update order set a='test',b=b+1 where id=100"},response:,error:Post 172.20.0.1: unsupported protocol scheme ""
+[2019-05-22 17:47:42] post:172.20.0.2,{"mid":6534359706134532096,"content":"insert into orders_detail (a,b) values ('name','张飞')"},response:,error:Post 172.20.0.2: unsupported protocol scheme ""
+[2019-05-22 17:47:42] post:,{"mid":6534359908690055168,"content":"update order set a='test',b=b+1 where id=100"},response:,error:Post : unsupported protocol scheme ""
+[2019-05-22 17:47:42] post:,{"mid":6534359908690055168,"content":"insert into orders_detail (a,b) values ('name','张飞')"},response:,error:Post : unsupported protocol scheme ""
+[2019-05-22 17:47:43] post:http://172.20.0.1,{"mid":6534360294243061760,"content":"update order set a='test',b=b+1 where id=100"},response:,error:Post http://172.20.0.1: dial tcp 172.20.0.1:80: connectex: No connection could be made because the target machine actively refused it.
+[2019-05-22 17:47:43] post:http://172.20.0.2,{"mid":6534360294243061760,"content":"insert into orders_detail (a,b) values ('name','张飞')"},response:<!DOCTYPE html><html><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=renderer content=webkit><meta http-equiv=Content-Type content="text/html; charset=UTF-8"><meta http-equiv=Expires content=0><meta http-equiv=Pragma content=no-cache><meta http-equiv=Cache-control content=no-cache><meta http-equiv=Cache content=no-cache><script>if(!Proxy){
+            alert('您的浏览器无法正常使用该ERP系统，请更换Chrome,火孤浏览器，不便之处请谅解');
+        }</script><title>ERP系统--利朗达</title><style>html {
+            font-size: 62.5%;
+        }</style><link href=/static/css/app.9c39925ae7ef92ce2d0e539c30f743b2.css rel=stylesheet></head><body><div id=app></div><script type=text/javascript src=/static/js/manifest.620763b41e2c90964842.js></script><script type=text/javascript src=/static/js/vendor.bbdc5655330ff3156fc4.js></script><script type=text/javascript src=/static/js/app.e941c5e6a591c4632a8d.js></script></body></html>,error:invalid character '<' looking for beginning of value
+[2019-05-22 17:47:43] post:http://172.18.8.242,{"mid":6534362494679797760,"content":"update order set a='test',b=b+1 where id=100"},response:{"message":"请先登录..."}
+[2019-05-22 17:47:43] post:http://172.18.8.242,{"mid":6534362922209398784,"content":"update order set a='test',b=b+1 where id=100"},response:{"message":"请先登录..."}
+[2019-05-22 17:47:43] post:http://172.18.8.242,{"mid":6534364293499342848,"content":"update order set a='test',b=b+1 where id=100"},response:{"message":"请先登录..."}
+[2019-05-22 17:47:43] post:http://172.18.8.242,{"mid":6535076069320839168,"content":"update order set a='test',b=b+1 where id=100"},response:{"message":"请先登录..."}
+[2019-05-22 17:47:43] post:http://172.18.8.242,{"mid":6535082121563099136,"content":"update order set a='test',b=b+1 where id=100"},response:{"message":"请先登录..."}
+[2019-05-22 17:47:43] post:http://172.18.8.242,{"mid":6535083390428139520,"content":"update order set a='test',b=b+1 where id=100"},response:{"message":"请先登录..."}
+[2019-05-22 17:47:43] post:http://172.18.8.242,{"mid":6535086008386867200,"content":"update order set a='test',b=b+1 where id=100"},response:{"message":"请先登录..."}
+[2019-05-22 17:47:43] get:,response:,error:Get ?mid=0: unsupported protocol scheme ""
+[2019-05-22 17:47:43] post:http://172.18.8.242,{"mid":6693750837702819840,"content":"update order set a='test',b=b+1 where id=100"},response:{"message":"请先登录..."}

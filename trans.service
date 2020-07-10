@@ -1,0 +1,18 @@
+[Unit]
+Description=Echo trans_message server
+After=network.target remote-fs.target nss-lookup.target syslog.target
+
+[Service]
+Type=simple
+#LimitNOFILE=65535
+PIDFile=/var/run/trans_message.pid
+ExecStart=/usr/bin/trans_message
+ExecReload=/bin/kill -s HUP $MAINPID
+#ExecReload=/bin/kill -USR1 $MAINPID
+ExecStop=/bin/kill $MAINPID
+Restart=always
+#on-failure
+#PrivateTmp=True
+
+[Install]
+WantedBy=multi-user.target
