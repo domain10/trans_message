@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"core"
 	"encoding/json"
 	"net/http"
+	"trans_message/my_vendor/core"
 
 	"trans_message/middleware"
 	"trans_message/models"
@@ -24,7 +24,7 @@ type RegisterData struct {
 }
 
 /**
- * @注册应用
+ * 注册应用
  */
 func (_ *App) Register(ctx *core.Context) {
 	var data RegisterData
@@ -34,7 +34,7 @@ func (_ *App) Register(ctx *core.Context) {
 			appkey := middleware.GenerateAppkey()
 			//-------------db---------------
 			model := new(models.Application)
-			modelData := &models.Application{App_key: appkey, Ip: ctx.ClientIP(), Name: data.Name, Query_url: data.Query_url, Notify_url: data.Notify_url, Describe: data.Describe}
+			modelData := &models.Application{App_key: appkey, Ip_arr: ctx.ClientIP(), Name: data.Name, Query_url: data.Query_url, Notify_url: data.Notify_url, Describe: data.Describe}
 			if err = model.RegisterOp(modelData); err == nil {
 				ctx.Success(map[string]interface{}{"app_key": appkey})
 			} else {

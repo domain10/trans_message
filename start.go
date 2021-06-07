@@ -12,7 +12,7 @@ import (
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	//-----------定时通知------------
+	//-----------通知------------
 	go scan()
 
 	// 运行模式

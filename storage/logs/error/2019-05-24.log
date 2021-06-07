@@ -1,5 +1,0 @@
-[2019-05-24 14:23:05] post:http://172.18.8.242,data:{"mid":1558612331947-0,"content":"update order set a='test',b=b+1 where id=100"},response:{"message":"请先登录..."}
-[2019-05-24 14:23:21] post:http://172.18.8.242,data:{"mid":1558612331947-0,"content":"update order set a='test',b=b+1 where id=100"},response:{"message":"请先登录..."}
-[2019-05-24 14:23:43] post:http://172.18.8.242,data:{"mid":1558612331947-0,"content":"update order set a='test',b=b+1 where id=100"},response:{"message":"请先登录..."}
-[2019-05-24 15:44:51] post:http://172.18.8.242,data:{"mid":1558612331947-0,"content":"update order set a='test',b=b+1 where id=100"},response:{"message":"请先登录..."}
-[2019-05-24 21:03:55] post:http://172.18.8.242,data:{"mid":6694578460720889856,"content":"update order set a='test',b=b+1 where id=100"},response:{"message":"请先登录..."}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"trans_message/middleware/server"
 
 	"github.com/go-ini/ini"
 	"github.com/jinzhu/gorm"
@@ -36,7 +37,7 @@ func GetConnect(name string) ([]*gorm.DB, error) {
 	var maxIdleConns int
 	var maxOpenConns int
 	// load配置
-	cfg, err = ini.Load("conf/database.ini")
+	cfg, err = ini.Load(server.RunPath() + "/conf/database.ini")
 	if err != nil {
 		fmt.Printf("%v", err)
 		os.Exit(1)
@@ -71,6 +72,7 @@ func GetConnect(name string) ([]*gorm.DB, error) {
 		conn.SingularTable(true)
 		connArr = append(connArr, conn)
 	case 2:
+		fallthrough
 	default:
 		// 主机
 		hostArr := cfg.Section(name).Key("host").Strings(",")

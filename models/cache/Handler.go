@@ -66,9 +66,27 @@ func (self *Handler) Hset(value ...interface{}) (int, error) {
 	return redis.Int(self.Do("hset", value...))
 }
 
+func (self *Handler) Get(value ...interface{}) (string, error) {
+	return redis.String(self.Do("get", value...))
+}
+
 func (self *Handler) Set(value ...interface{}) (string, error) {
 	return redis.String(self.Do("set", value...))
 }
+
+func (self *Handler) Del(value ...interface{}) (int, error) {
+	return redis.Int(self.Do("del", value...))
+}
+
+func (self *Handler) Expire(value ...interface{}) (int, error) {
+	return redis.Int(self.Do("expire", value...))
+}
+
+/*
+func (self *Handler) TTL(value ...interface{}) (int64, error) {
+	return redis.Int64(self.Do("ttl", value...))
+}
+
 func (self *Handler) Xadd(data string) (string, error) {
 	return redis.String(self.Do("xadd", messageKey, "*", field, data))
 }
@@ -87,3 +105,4 @@ func (self *Handler) Xread(mid string) (result string, err error) {
 	}
 	return
 }
+*/

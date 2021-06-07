@@ -11,7 +11,8 @@ import (
 	"time"
 
 	"trans_message/middleware/server"
-	"utils"
+	"trans_message/models"
+	"trans_message/my_vendor/utils"
 )
 
 var (
@@ -19,11 +20,14 @@ var (
 	lastTimeStamp int64 // 上次的时间戳(秒，占31)
 	serverId      int64 // 机器 id 占10位, 十进制范围是 [ 0, 1023 ]
 	sn            int64 // 序列号占 22 位,十进制范围是 [ 0, 4194303 ]
+	msgChannel    chan bool
+	appTable      map[string]models.Application
 )
 
 type ResponseResult struct {
-	Msg  string
-	Data interface{}
+	Result string
+	Msg    string
+	Data   interface{}
 }
 
 func init() {
@@ -31,6 +35,28 @@ func init() {
 	serverId = server.GetConfig().SERVER_ID
 	// 左移12位,让出空间给序列号使用
 	serverId = serverId << 22
+	msgChannel = make(chan bool, 1)
+	// 应用数据
+	appTable = make(map[string]models.Application)
+	aLists := new(models.Application).Lists()
+	for _, data := range aLists {
+		appTable[data.Name] = data
+	}
+}
+
+func GetMsgChannel() chan bool {
+	return msgChannel
+}
+
+func GetAppTable(name string) (appInfo models.Application, ok bool) {
+	appInfo, ok = appTable[name]
+	return
+}
+
+func SetAppTable(name string, data models.Application) {
+	if data.ID >= 0 {
+		appTable[name] = data
+	}
 }
 
 func GenerateId() int64 {
@@ -84,15 +110,25 @@ func IpAddrCheck(addr string) bool {
 /**
  * @支持get方式，post的json数据
  */
-func RequestOp(url, methond, data, contentType string) (respResult string, err error) {
-	var tmpResponse ResponseResult
+func RawRequest(url, methond, data, contentType string) (result []byte, err error) {
 	var resp *http.Response
+	client := &http.Client{
+		Transport: &http.Transport{
+			Dial: func(netw, addr string) (conn net.Conn, err error) {
+				conn, err = net.DialTimeout(netw, addr, time.Second*5) //设置建立连接超时
+				//conn.SetDeadline(time.Now().Add(time.Second * 2))
+				return
+			},
+			ResponseHeaderTimeout: time.Second * 5, //设置发送、接受头部数据超时
+		},
+	}
+
 	switch methond {
 	case "GET":
 		if data != "" {
 			url += "?" + data
 		}
-		resp, err = http.Get(url)
+		resp, err = client.Get(url)
 	case "POST":
 		fallthrough
 	default:
@@ -101,28 +137,29 @@ func RequestOp(url, methond, data, contentType string) (respResult string, err e
 			contentType = "application/json;charset=utf-8"
 		}
 		body := strings.NewReader(data)
-		resp, err = http.Post(url, contentType, body)
+		resp, err = client.Post(url, contentType, body)
 	}
 	if err != nil {
-		return "", err
+		return
 	} else if resp != nil {
 		defer resp.Body.Close()
 	}
-	respContent, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	err = json.Unmarshal(respContent, &tmpResponse)
-	if err != nil || tmpResponse.Msg == "" {
-		tmp := []rune(string(respContent))
-		if len(tmp) > 255 {
-			respResult = string(tmp[0:255])
-		} else {
-			respResult = string(respContent)
-		}
 
-	} else {
-		respResult = tmpResponse.Msg
+	result, err = ioutil.ReadAll(resp.Body)
+	return
+}
+
+func RequestOp(url, methond, data, contentType string) (result ResponseResult, err error) {
+	respContent, err := RawRequest(url, methond, data, contentType)
+	if err == nil {
+		err = json.Unmarshal(respContent, &result)
+		if err != nil || (result.Result == "" && result.Msg == "") {
+			result.Msg = string(respContent)
+			tmp := []rune(result.Msg)
+			if len(tmp) > 1024 {
+				result.Msg = string(tmp[:1024])
+			}
+		}
 	}
 	return
 }

@@ -6,6 +6,7 @@ import (
 	// "os"
 	"strings"
 	"time"
+	"trans_message/middleware/server"
 
 	"github.com/go-ini/ini"
 	"github.com/gomodule/redigo/redis"
@@ -31,7 +32,7 @@ func GetCache(name string, dbNum int) (redisPool *redis.Pool, err error) {
 	var maxOpenConns int
 
 	// load配置
-	cfg, err = ini.Load("conf/redis.ini")
+	cfg, err = ini.Load(server.RunPath() + "/conf/redis.ini")
 	if err != nil {
 		return nil, err
 	}

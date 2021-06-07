@@ -1,7 +1,7 @@
 package routers
 
 import (
-	"core"
+	"trans_message/my_vendor/core"
 
 	"trans_message/controllers"
 	"trans_message/middleware"
@@ -27,7 +27,8 @@ func Register() *gin.Engine {
 	//v1.Use(core.Handle(middleware.Auth))
 	{
 		v1.POST("/create", core.Handle(trans.Create))
-		v1.PUT("/submit/:mid", core.Handle(trans.Submit))
+		v1.PUT("/confirm", core.Handle(trans.Confirm))
+		v1.PUT("/callback", core.Handle(trans.NotifyCallback))
 		//
 		// v1.POST("/create", core.Handle(trans.CreateR))
 		// v1.PUT("/submit/:mid", core.Handle(trans.SubmitR))

@@ -3,11 +3,12 @@ package log
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
-	"strings"
-
 	"os"
 	"runtime/debug"
+	"sort"
+	"strings"
 	"time"
 	"trans_message/middleware/server"
 
@@ -33,23 +34,22 @@ import (
 // ---------------------------------------------------------------
 
 var (
-	ErrorWriter      io.Writer
-	ServiceErrWriter io.Writer
-	InfoWriter       io.Writer
-	dateStr          string
-	accessLog        *os.File
-	errorLog         *os.File
-	ServiceErrLog    *os.File
-	infoLog          *os.File
-	cstZone          = time.FixedZone("CST", 8*3600)
+	ErrorWriter     io.Writer
+	SystemErrWriter io.Writer
+	InfoWriter      io.Writer
+	dateStr         string
+	infoLog         *os.File
+	accessLog       *os.File
+	errorLog        *os.File
+	systemErrLog    *os.File
+	cstZone         = time.FixedZone("CST", 8*3600)
 )
 
 const (
-	LeveL_WARNING = "warning"
-	LeveL_INFO    = "info"
-	LeveL_DEBUG   = "debug"
-	LeveL_ERROR   = "error"
-	LeveL_SERIOUS = "serious"
+	LEVEL_INFO int = iota
+	LEVEL_ACCESS
+	LEVEL_ERROR
+	LEVEL_SYSTEM_ERROR
 )
 
 type E struct {
@@ -65,76 +65,122 @@ type M map[string]interface{}
 
 func init() {
 	dateStr = time.Now().In(cstZone).Format("2006-01-02")
-	InitAllLogger()
+	startLog := []int{LEVEL_ERROR, LEVEL_SYSTEM_ERROR}
+	for _, t := range startLog {
+		InitAllLogger(t, true)
+	}
+
 }
 
-func InitAllLogger() {
-	//----------M-------------
+func InitAllLogger(logType int, reopen bool) {
+	// 按天生成日志文件
 	currDate := time.Now().In(cstZone).Format("2006-01-02")
 	if oldTime, err := time.ParseInLocation("2006-01-02 15:04:05", dateStr+" 00:00:00", cstZone); err == nil {
 		currTime, _ := time.ParseInLocation("2006-01-02 15:04:05", currDate+" 00:00:00", cstZone)
 		if currTime.Unix() > oldTime.Unix() {
 			dateStr = currDate
-		} else {
+		} else if !reopen {
 			return
 		}
-		// } else {
-		// 	return
 	}
-	//-----------------------
-	// init access.log
-	if server.GetConfig().ACCESS_LOG != "" {
-		gin.DefaultWriter = InitLogger(server.GetConfig().ACCESS_LOG, 1)
+	switch logType {
+	case LEVEL_INFO:
+		// init info.log
+		if server.GetConfig().INFO_LOG != "" {
+			InfoWriter = InitLogger(server.GetConfig().INFO_LOG, LEVEL_INFO)
+		}
+	case LEVEL_ACCESS:
+		// init access.log
+		if server.GetConfig().ACCESS_LOG != "" {
+			gin.DefaultWriter = InitLogger(server.GetConfig().ACCESS_LOG, LEVEL_ACCESS)
+		}
+	case LEVEL_ERROR:
+		// init error.log
+		if server.GetConfig().ERROR_LOG != "" {
+			ErrorWriter = InitLogger(server.GetConfig().ERROR_LOG, LEVEL_ERROR)
+		}
+	case LEVEL_SYSTEM_ERROR:
+		if server.GetConfig().Trans_system_err != "" {
+			SystemErrWriter = InitLogger(server.GetConfig().Trans_system_err, LEVEL_SYSTEM_ERROR)
+		}
+	}
+}
+
+/**
+ * 降序
+ */
+func sortByTime(pl []os.FileInfo) []os.FileInfo {
+	sort.Slice(pl, func(i, j int) bool {
+		flag := false
+		if pl[i].ModTime().After(pl[j].ModTime()) {
+			flag = true
+		} else if pl[i].ModTime().Equal(pl[j].ModTime()) {
+			if pl[i].Name() < pl[j].Name() {
+				flag = true
+			}
+		}
+		return flag
+	})
+	return pl
+}
+
+func clearLogFile(folder string) {
+	files, errDir := ioutil.ReadDir(folder)
+	if errDir != nil {
+		//Println("[提示]", errDir)
+		return
 	}
 
-	// init error.log
-	if server.GetConfig().ERROR_LOG != "" {
-		ErrorWriter = InitLogger(server.GetConfig().ERROR_LOG, 2)
-	}
-
-	if server.GetConfig().SERVICE_ERR_LOG != "" {
-		ServiceErrWriter = InitLogger(server.GetConfig().SERVICE_ERR_LOG, 3)
-	}
-	// init info.log
-	if server.GetConfig().INFO_LOG != "" {
-		InfoWriter = InitLogger(server.GetConfig().INFO_LOG, 4)
+	files = sortByTime(files)
+	i := 0
+	for _, file := range files {
+		if !file.IsDir() {
+			i++
+			if i > server.GetConfig().Max_files {
+				os.Remove(folder + file.Name())
+			}
+		}
 	}
 }
 
 func InitLogger(path string, t int) io.Writer {
 	var err error
 	var filePtr *os.File
-	if strings.HasSuffix(path, "/") {
-		path += dateStr + ".log"
-	} else {
-		path += "/" + dateStr + ".log"
+	if !strings.HasSuffix(path, "/") {
+		path += "/"
 	}
+	path = server.RunPath() + strings.TrimLeft(path, ".")
+	// 清楚历史日志文件
+	clearLogFile(path)
+
+	path += dateStr + ".log"
+
 	switch t {
-	case 1:
+	case LEVEL_ACCESS:
 		if accessLog != nil {
 			accessLog.Close()
 		}
-		accessLog, err = os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		accessLog, err = os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
 		filePtr = accessLog
-	case 2:
+	case LEVEL_ERROR:
 		if errorLog != nil {
 			errorLog.Close()
 		}
-		errorLog, err = os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		errorLog, err = os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
 		filePtr = errorLog
-	case 3:
-		if ServiceErrLog != nil {
-			ServiceErrLog.Close()
+	case LEVEL_SYSTEM_ERROR:
+		if systemErrLog != nil {
+			systemErrLog.Close()
 		}
-		ServiceErrLog, err = os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-		// os.Stdout = ServiceErrLog
-		// os.Stderr = ServiceErrLog
-		filePtr = ServiceErrLog
+		systemErrLog, err = os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
+		// os.Stdout = systemErrLog
+		// os.Stderr = systemErrLog
+		filePtr = systemErrLog
 	default:
 		if infoLog != nil {
 			infoLog.Close()
 		}
-		infoLog, err = os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		infoLog, err = os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
 		filePtr = infoLog
 	}
 	if err != nil {
@@ -148,33 +194,44 @@ func InitLogger(path string, t int) io.Writer {
 }
 
 func Error(data interface{}) {
-	if server.GetConfig().ERROR_LOG != "" {
-		InitAllLogger()
-		//-----------------------
+	reopen := false
+	if ErrorWriter == nil {
+		reopen = true
+	}
+	InitAllLogger(LEVEL_ERROR, reopen)
+
+	if ErrorWriter != nil {
 		fmt.Fprintf(ErrorWriter, "%s", "["+time.Now().Format("2006-01-02 15:04:05")+"] ")
 		fmt.Fprintf(ErrorWriter, "%s", data)
 		fmt.Fprintf(ErrorWriter, "%s", "\n")
 	}
 }
 func ErrorStrace(data interface{}) {
-	if server.GetConfig().SERVICE_ERR_LOG != "" {
-		InitAllLogger()
-		//-----------------------
-		fmt.Fprintf(ServiceErrWriter, "%s", "["+time.Now().Format("2006-01-02 15:04:05")+"] ")
-		fmt.Fprintf(ServiceErrWriter, "%s", data)
-		fmt.Fprintf(ServiceErrWriter, "%s", "\n")
-		fmt.Fprintf(ServiceErrWriter, "%s", "Stack trace:\n")
-		fmt.Fprintf(ServiceErrWriter, "%s", debug.Stack())
-		fmt.Fprintf(ServiceErrWriter, "%s", "\n")
+	reopen := false
+	if SystemErrWriter == nil {
+		reopen = true
+	}
+	InitAllLogger(LEVEL_SYSTEM_ERROR, reopen)
+
+	if SystemErrWriter != nil {
+		fmt.Fprintf(SystemErrWriter, "%s", "["+time.Now().Format("2006-01-02 15:04:05")+"] ")
+		fmt.Fprintf(SystemErrWriter, "%s", data)
+		fmt.Fprintf(SystemErrWriter, "%s", "\n")
+		fmt.Fprintf(SystemErrWriter, "%s", "Stack trace:\n")
+		fmt.Fprintf(SystemErrWriter, "%s", debug.Stack())
+		fmt.Fprintf(SystemErrWriter, "%s", "\n")
 	}
 }
 
 func Info(info E) {
-	if server.GetConfig().INFO_LOG != "" {
-		InitAllLogger()
-		//-----------------------
-		fmt.Fprintf(InfoWriter, "%s", "["+time.Now().Format("2006-01-02 15:04:05")+"]")
+	reopen := false
+	if InfoWriter == nil {
+		reopen = true
+	}
+	InitAllLogger(LEVEL_INFO, reopen)
 
+	if InfoWriter != nil {
+		fmt.Fprintf(InfoWriter, "%s", "["+time.Now().Format("2006-01-02 15:04:05")+"]")
 		if info.Level == "" {
 			info.Level = "info"
 		}

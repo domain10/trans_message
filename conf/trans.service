@@ -1,0 +1,20 @@
+[Unit]
+Description=trans_message server
+After=network.target remote-fs.target nss-lookup.target syslog.target
+
+[Service]
+Type=simple
+User=nginx
+#LimitNOFILE=65535
+PIDFile=/var/run/trans_message.pid
+ExecStart=/srv/www/trans_message/run_message
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+
+#on-failure
+#PrivateTmp=True
+#ExecReload=/bin/kill -USR1 $MAINPID
+#ExecStop=/bin/kill $MAINPID
+
+[Install]
+WantedBy=multi-user.target graphical.target

@@ -1,2 +1,0 @@
-[2019-05-27 16:33:48] post:http://172.18.8.242,data:{"mid":6695622167838588928,"content":"update order set a='test',b=b+1 where id=100"},response:{"message":"请先登录..."}
-[2019-05-27 17:00:18] post:http://172.18.8.242,data:{"mid":6695622167838588928,"content":"update order set a='test',b=b+1 where id=100"},response:{"message":"请先登录..."}
