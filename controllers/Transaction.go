@@ -55,20 +55,18 @@ func (this *Transaction) Create(ctx *core.Context) {
 		return
 	}
 	err = json.Unmarshal(rawData, &data)
-	if err != nil || data.From_app == "" || data.Message_type <= 0 || data.List == nil {
+	if err != nil || data.From_app == "" || data.Message_type <= 0 {
 		ctx.Fail(http.StatusBadRequest, "Please pass the correct JSON data", nil)
 		return
+	} else if len(data.List) < 1 {
+		ctx.Fail(http.StatusBadRequest, "Please pass the message content", nil)
+		return
 	}
-	content, _ := json.Marshal(data.List)
+	//content, _ := json.Marshal(data.List)
 
 	//-------------check------------
-
 	if !this.CheckAppExist(data.From_app) {
-
 		ctx.Fail(http.StatusBadRequest, "Please complete the registration first", nil)
-	} else if this.CheckDuplicated(data.From_app + string(content)) {
-
-		ctx.Fail(http.StatusBadRequest, "Please do not submit duplicate messages", nil)
 	} else {
 		// 找出通知url
 		for k, msg := range data.List {
@@ -82,36 +80,37 @@ func (this *Transaction) Create(ctx *core.Context) {
 				continue
 			}
 			// 获取应用信息
-			toAppInfo, ok := middleware.GetAppTable(msg.To_app)
-			if !ok {
-				toAppInfo = this.GetAppInfos(msg.To_app)
-				middleware.SetAppTable(msg.To_app, toAppInfo)
-			}
+			toAppInfo := this.GetAppInfos(msg.To_app)
 			if toAppInfo.Notify_url == "" {
-				ctx.Fail(http.StatusBadRequest, "to_app("+msg.To_app+") does not exist", nil)
+				ctx.Fail(http.StatusBadRequest, "to_app("+msg.To_app+") url does not exist", nil)
 				return
 			}
 			data.List[k].To_url = toAppInfo.Notify_url
 		}
-		content, _ = json.Marshal(data.List)
+		// 要改为加入管道
+		content, _ := json.Marshal(data.List)
+		listStr := string(content)
+		if this.CheckDuplicated(data.From_app + listStr) {
+			ctx.Fail(http.StatusBadRequest, "Please do not submit duplicate messages", nil)
+			return
+		}
 
 		if data.Mid == 0 {
 			data.Mid = middleware.GenerateId()
 		}
 		// 入库
 		model := new(models.MessageList)
-		if id := model.Insert(data.Mid, data.From_app, ctx.ClientIP(), data.Message_type, string(content)); id > 0 {
+		if id := model.Insert(data.Mid, data.From_app, ctx.ClientIP(), data.Message_type, listStr); id > 0 {
 			msgC := middleware.GetMsgChannel()
 			select {
 			case msgC <- true:
 			default:
 			}
-			ctx.Success(map[string]interface{}{"mid": data.Mid})
+			ctx.Success(map[string]int64{"mid": data.Mid})
 		} else {
 			ctx.Fail(http.StatusInternalServerError, "Failed to save message:", nil)
 		}
 	}
-
 }
 
 /**
@@ -154,6 +153,7 @@ func (this *Transaction) Confirm(ctx *core.Context) {
 		model.ModifyStatus(data.Mid, "", data.Msg, models.CANCEL_MSG)
 		ctx.Success(nil)
 	}
+	this.DelCachedMsg(tmpData.AppName + tmpData.List)
 }
 
 /**

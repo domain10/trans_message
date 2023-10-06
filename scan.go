@@ -17,17 +17,20 @@ import (
  * 通知人为处理
  */
 func notifyHuman(content string) (err error) {
-	type DingMsg struct {
+	if server.GetConfig().Ding_group_url == "" {
+		return
+	}
+	type dingMsg struct {
 		Msgtype  string            `json:"msgtype"`
 		Markdown map[string]string `json:"markdown"`
 		At       map[string]bool   `json:"at"`
 	}
-	type DingResponse struct {
+	type dingResponse struct {
 		Errcode int    `json:"errcode"`
 		Errmsg  string `json:"errmsg"`
 	}
-	var data DingMsg
-	var respData DingResponse
+	var data dingMsg
+	var respData dingResponse
 	data.Markdown = make(map[string]string)
 	data.At = make(map[string]bool)
 
@@ -48,15 +51,13 @@ func notifyHuman(content string) (err error) {
 	return
 }
 
-func RunQueryNotify(data models.MessageList, appInfo models.Application, runNotifyCh <-chan bool) {
+func RunQueryNotify(data models.MessageList, appInfo models.Application, baseObj *controllers.Base, msgModel *models.MessageList, runNotifyCh <-chan bool) {
 	defer func() {
 		<-runNotifyCh
 		// if err := recover(); err != nil {
 		// 	log.ErrorStrace(err)
 		// }
 	}()
-	model := new(models.MessageList)
-	baseObj := new(controllers.Base)
 	content := "事务消息通知失败，"
 	needAlarm := false
 
@@ -74,7 +75,7 @@ func RunQueryNotify(data models.MessageList, appInfo models.Application, runNoti
 				baseObj.NotifyMessage(data)
 				return
 			} else if "cancel" == resp.Result {
-				model.ModifyStatus(data.Mid, "", resp.Msg, models.CANCEL_MSG)
+				msgModel.ModifyStatus(data.Mid, "", resp.Msg, models.CANCEL_MSG)
 				return
 			}
 		}
@@ -84,7 +85,7 @@ func RunQueryNotify(data models.MessageList, appInfo models.Application, runNoti
 			content = "该事务消息未进行confirm，"
 			needAlarm = true
 		}
-		model.ModifyQuery(data.Mid, resp.Msg, upStatus)
+		msgModel.ModifyQuery(data.Mid, resp.Msg, upStatus)
 
 		// 记录日志
 		logStr := "get:" + appInfo.Query_url
@@ -107,7 +108,7 @@ func RunQueryNotify(data models.MessageList, appInfo models.Application, runNoti
 	if needAlarm {
 		content += "\n mid: " + strconv.FormatInt(data.Mid, 10) + "，\n 消息内容：" + data.List
 		if err := notifyHuman(content); err == nil {
-			model.ModifyAlarm(data.Mid)
+			msgModel.ModifyAlarm(data.Mid)
 		}
 	}
 }
@@ -123,31 +124,27 @@ func scan() {
 	}()
 	var (
 		appInfo     models.Application
-		ok          bool
+		sleepTime   int
 		isSubtable  bool = false
 		runNotifyCh      = make(chan bool, server.GetConfig().Con_notices)
 	)
 	defaultInterval, _ := strconv.Atoi(server.GetConfig().Default_interval)
-	//appTable := middleware.GetAppTable()
-	model := new(models.MessageList)
-	appModel := new(models.Application)
+	baseObj := new(controllers.Base)
+	msgModel := new(models.MessageList)
 	msgC := middleware.GetMsgChannel()
 
-	model.HandleOverflowTable()
+	msgModel.HandleOverflowTable()
 
 	for {
-		sleepTime := defaultInterval
-		mLists := model.GetNotifyMessage(server.GetConfig().Default_interval, server.GetConfig().Alarm_interval)
+		sleepTime = defaultInterval
+		mLists := msgModel.GetNotifyMessage(server.GetConfig().Default_interval, server.GetConfig().Alarm_interval)
 		//
 		for _, data := range mLists {
-			if data.ID > model.GetMaxTableSize() {
+			if data.ID > msgModel.GetMaxTableSize() {
 				isSubtable = true
 			}
 			// 无需重复查表
-			if appInfo, ok = middleware.GetAppTable(data.AppName); !ok {
-				appInfo = appModel.GetInfosByName(data.AppName)
-				middleware.SetAppTable(data.AppName, appInfo)
-			}
+			appInfo = baseObj.GetAppInfos(data.AppName)
 
 			if data.Need_run > 0 {
 				// 不需运行，取最小
@@ -160,10 +157,11 @@ func scan() {
 			}
 
 			runNotifyCh <- true
-			go RunQueryNotify(data, appInfo, runNotifyCh)
+			go RunQueryNotify(data, appInfo, baseObj, msgModel, runNotifyCh)
 		}
 
-		if len(mLists) > 0 {
+		hasData := middleware.ClearTimeoutMsg()
+		if len(mLists) > 0 || hasData {
 			select {
 			case msgC <- true:
 				time.Sleep(time.Duration(sleepTime) * time.Second)
@@ -171,7 +169,7 @@ func scan() {
 				time.Sleep(time.Duration(sleepTime) * time.Second)
 			}
 		} else if isSubtable {
-			model.HandleOverflowTable()
+			msgModel.HandleOverflowTable()
 		}
 
 		<-msgC

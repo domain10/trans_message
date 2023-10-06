@@ -1,16 +1,15 @@
 package models
 
 import (
-	"encoding/json"
 	"errors"
-	"math/rand"
-
+	// "encoding/json"
+	//"math/rand"
 	// "strconv"
 	// "time"
-	"trans_message/models/cache"
+	// "trans_message/models/cache"
 )
 
-var hkey = "table:application:name"
+// var hkey = "table:application:name"
 
 type Application struct {
 	ID              int    `gorm:"column:id;primary_key"`
@@ -36,18 +35,19 @@ func (_ *Application) GetInfosByName(name string) Application {
 	if name == "" {
 		return data
 	}
-	cacheObj := new(cache.Handler).On()
-
-	if tmp, err := cacheObj.Hget(hkey, name); err == nil && tmp != "" {
-		err = json.Unmarshal([]byte(tmp), &data)
-	} else {
-		GetOrm(0, nil).Where("name=? and status=1", name).First(&data)
-		if tmp, err := json.Marshal(data); err == nil {
-			cacheObj.Hset(hkey, name, string(tmp))
-			cacheObj.Expire(hkey, 12*3600+rand.Intn(300))
-		}
-	}
+	GetOrm(0, nil).Where("name=? and status=1", name).First(&data)
 	return data
+	//cacheObj := new(cache.Handler).On()
+	//if tmp, err := cacheObj.Hget(hkey, name); err == nil && tmp != "" {
+	//	err = json.Unmarshal([]byte(tmp), &data)
+	//} else {
+	// GetOrm(0, nil).Where("name=? and status=1", name).First(&data)
+	// if tmp, err := json.Marshal(data); err == nil {
+	// 	cacheObj.Hset(hkey, name, string(tmp))
+	// 	cacheObj.Expire(hkey, 12*3600+rand.Intn(300))
+	// }
+	//}
+
 }
 
 func (_ *Application) Lists() []Application {
@@ -82,10 +82,10 @@ func (self *Application) RegisterOp(data *Application) (err error) {
 		if err == nil {
 			err = tx.Commit().Error
 			//
-			tmp, tmpErr := json.Marshal(data)
-			if err == nil && tmpErr == nil {
-				new(cache.Handler).On().Hset(hkey, data.App_key, string(tmp))
-			}
+			// tmp, tmpErr := json.Marshal(data)
+			// if err == nil && tmpErr == nil {
+			// 	new(cache.Handler).On().Hset(hkey, data.App_key, string(tmp))
+			// }
 		} else {
 			tx.Rollback()
 		}

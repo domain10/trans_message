@@ -9,8 +9,8 @@ import (
 	"trans_message/middleware"
 	"trans_message/middleware/log"
 	"trans_message/models"
-	"trans_message/models/cache"
 	"trans_message/my_vendor/utils"
+	// "trans_message/models/cache"
 	//"github.com/gin-gonic/gin"
 )
 
@@ -18,10 +18,10 @@ type Base struct {
 }
 
 type MessageData struct {
+	Status  int    `json:"status"`
 	To_app  string `json:"to_app"`
 	To_url  string `json:"to_url"`
 	Content string `json:"content"`
-	Status  int    `json:"status"`
 }
 
 type NotifyData struct {
@@ -34,7 +34,7 @@ type NotifyData struct {
 /**
  * 发送通知事务消息
  */
-func (_ *Base) NotifyMessage(data models.MessageList) (needAlarm bool, err error) {
+func (this *Base) NotifyMessage(data models.MessageList) (needAlarm bool, err error) {
 	var list []MessageData
 
 	if err = json.Unmarshal([]byte(data.List), &list); err == nil {
@@ -48,7 +48,7 @@ func (_ *Base) NotifyMessage(data models.MessageList) (needAlarm bool, err error
 		model := new(models.MessageList)
 		for k, v := range list {
 			// 获取通知该应用的信息
-			if toApp, ok := middleware.GetAppTable(v.To_app); ok {
+			if toApp := this.GetAppInfos(v.To_app); toApp.App_key != "" {
 				maxNotices = toApp.Notify_times
 				appkey = toApp.App_key
 			}
@@ -62,13 +62,13 @@ func (_ *Base) NotifyMessage(data models.MessageList) (needAlarm bool, err error
 				postStr, _ := json.Marshal(postData)
 
 				resp, err := middleware.RequestOp(v.To_url, "POST", string(postStr), "")
-				detail += resp.Result + "," + resp.Msg + ";"
+				detail += resp.Result + "  " + resp.Msg + ";"
 
 				if err == nil && "success" == resp.Result {
 					i++
 					list[k].Status = 1
 				} else {
-					logStr := "post:" + v.To_url + ",data:" + string(postStr)
+					logStr := "post:" + v.To_url + ",sign_str:" + tmpStr + ",data:" + string(postStr)
 					if err != nil {
 						logStr += ",error:" + err.Error() + "|" + resp.Msg
 					} else {
@@ -94,7 +94,7 @@ func (_ *Base) NotifyMessage(data models.MessageList) (needAlarm bool, err error
 			model.ModifyNotify(data.Mid, string(tmpContent), detail, models.FAIL_MSG)
 			needAlarm = true
 		} else {
-			// 新消息、已通知过还未成功的
+			// 新消息 或 已通知过还未成功的
 			model.ModifyNotify(data.Mid, string(tmpContent), detail, models.NOTIFYING_MSG)
 		}
 	}
@@ -104,8 +104,14 @@ func (_ *Base) NotifyMessage(data models.MessageList) (needAlarm bool, err error
 }
 
 func (_ *Base) GetAppInfos(name string) (res models.Application) {
-	appModel := new(models.Application)
-	res = appModel.GetInfosByName(name)
+	var ok bool
+	res, ok = middleware.GetAppTable(name)
+	if !ok {
+		appModel := new(models.Application)
+		res = appModel.GetInfosByName(name)
+		middleware.SetAppTable(name, res)
+	}
+
 	return
 }
 
@@ -119,14 +125,22 @@ func (self *Base) CheckAppExist(name string) (res bool) {
 }
 
 func (_ *Base) CheckDuplicated(data string) (res bool) {
-	res = true
-	cacheObj := new(cache.Handler).On()
-	tmp, err := cacheObj.Set("set:check_message:"+utils.Md5(data), data, "EX", 30, "NX")
-	//fmt.Println(tmp, ",", err)
-	if err == nil && strings.ToLower(tmp) == "ok" {
-		res = false
-	}
+	//res = true
+	// cacheObj := new(cache.Handler).On()
+	// tmp, err := cacheObj.Set("set:check_message:"+utils.Md5(data), data, "EX", 10, "NX")
+	// if err == nil && strings.ToLower(tmp) == "ok" {
+	// 	res = false
+	// }
+	//返回true说明存在
+	res = middleware.SetMsgHtable(data, 1, "NX")
 	return
+}
+
+func (_ *Base) DelCachedMsg(data string) {
+	data = strings.Replace(data, `": `, `":`, -1)
+	data = strings.Replace(data, `, "`, `,"`, -1)
+	data = strings.Replace(data, `}, `, `},`, -1)
+	middleware.DelMsgHtable(data)
 }
 
 /*

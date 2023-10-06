@@ -2,7 +2,6 @@ package models
 
 import (
 	//"encoding/json"
-	// "fmt"
 	"time"
 
 	//"trans_message/models/cache"
@@ -14,9 +13,9 @@ var (
 	scanLimit int   = 100
 	maxsize   int64 = 50000000
 	// 详情字段长度
-	detailLen   int = 255
-	tablename       = "message_list"
-	subtablekey     = "subtable:message_lisg:tag"
+	detailLen int = 255
+	tablename     = "message_list"
+	//subtablekey     = "subtable:message_list:tag"
 )
 
 const (
@@ -29,10 +28,10 @@ const (
 	HUMAN_MSG
 )
 
-type cacheData struct {
-	Mid        int64  `json:"mid"`
-	CreateTime string `json:"create_time"`
-}
+// type cacheData struct {
+// 	Mid        int64  `json:"mid"`
+// 	CreateTime string `json:"create_time"`
+// }
 
 type MessageList struct {
 	ID          int64  `gorm:"column:id;primary_key"`
@@ -55,7 +54,7 @@ func (_ *MessageList) GetMaxTableSize() int64 {
 
 func (_ *MessageList) GetDataBymid(mid int64) MessageList {
 	var data MessageList
-	GetOrm(mid, nil).Select("id,mid,message_type,list,status,notify_count").Where("mid=?", mid).First(&data)
+	GetOrm(mid, nil).Select("id,mid,app_name,message_type,list,status,notify_count").Where("mid=?", mid).First(&data)
 	return data
 }
 
@@ -65,6 +64,7 @@ func (self *MessageList) Insert(mid int64, name, ip string, message_type int, li
 	}
 	result := &MessageList{Mid: mid, AppName: name, FromAddress: ip, MessageType: message_type, List: list}
 	GetOrm(mid, nil).Create(result)
+
 	return result.ID
 
 	// strInt64 := strconv.FormatInt(time.Now().Unix(), 10)
